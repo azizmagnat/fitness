@@ -1,0 +1,59 @@
+workflows:
+  ios-build-check:
+    name: iOS build check (no signing)
+    max_build_duration: 60
+    instance_type: mac_mini_m2
+    environment:
+      flutter: stable
+      xcode: latest
+      cocoapods: default
+    scripts:
+      - name: Get Flutter packages
+        script: flutter pub get
+      - name: Install CocoaPods
+        script: |
+          cd ios && pod install
+      - name: Build iOS (unsigned, validates the whole pipeline compiles)
+        script: |
+          flutter build ios --release --no-codesign
+    artifacts:
+      - build/ios/iphoneos/*.app
+
+  ios-release:
+    name: iOS signed release (.ipa for real devices / TestFlight)
+    max_build_duration: 60
+    instance_type: mac_mini_m2
+    environment:
+      flutter: stable
+      xcode: latest
+      cocoapods: default
+      ios_signing:
+        distribution_type: ad_hoc # switch to app_store for TestFlight/App Store
+        bundle_identifier: com.onefit.onefitApp
+      # Configure these in Codemagic > Team settings > Code signing identities,
+      # and connect an App Store Connect API key under App settings > Integrations
+      # before this workflow can run. See the note in the chat response for the
+      # step-by-step: an Apple Developer Program account ($99/yr) is required for
+      # this workflow; the ios-build-check workflow above needs no Apple account.
+    scripts:
+      - name: Get Flutter packages
+        script: flutter pub get
+      - name: Install CocoaPods
+        script: |
+          cd ios && pod install
+      - name: Set up code signing
+        script: |
+          keychain initialize
+          app-store-connect fetch-signing-files "$(xcode-project detect-bundle-id)" \
+            --type IOS_APP_ADHOC --create
+          keychain add-certificates
+          xcode-project use-profiles
+      - name: Build signed ipa
+        script: |
+          flutter build ipa --release --export-options-plist=/Users/builder/export_options.plist
+    artifacts:
+      - build/ios/ipa/*.ipa
+    publishing:
+      email:
+        recipients:
+          - azizbektuymurodov550@gmail.com
