@@ -107,6 +107,7 @@ class ScheduleItem {
   final String distanceKm;
   final String restriction;
   final String alertText;
+  final int durationMin;
   const ScheduleItem({
     required this.title,
     required this.gymName,
@@ -119,6 +120,7 @@ class ScheduleItem {
     this.distanceKm = "",
     this.restriction = "",
     this.alertText = "",
+    this.durationMin = 0,
   });
 
   ScheduleItem copyWith({String? status, bool? needsConfirmation}) {
@@ -134,7 +136,45 @@ class ScheduleItem {
       distanceKm: distanceKm,
       restriction: restriction,
       alertText: alertText,
+      durationMin: durationMin,
     );
+  }
+
+  static const _months = [
+    "yanvar", "fevral", "mart", "aprel", "may", "iyun",
+    "iyul", "avgust", "sentabr", "oktabr", "noyabr", "dekabr",
+  ];
+
+  /// The session's real start moment, parsed from the "D-oy" date label and
+  /// the leading "HH:MM" of [time] (which may be "HH:MM" or "HH:MM, N min").
+  /// Assumes the current year, rolling forward a year if that reads as more
+  /// than a few days in the past (handles bookings made right at year-end).
+  DateTime? get startDateTime {
+    final dateParts = date.split('-');
+    if (dateParts.length != 2) return null;
+    final day = int.tryParse(dateParts[0]);
+    final monthIndex = _months.indexOf(dateParts[1]);
+    if (day == null || monthIndex == -1) return null;
+    final hhmm = time.split(',').first.trim().split(':');
+    if (hhmm.length != 2) return null;
+    final hour = int.tryParse(hhmm[0]);
+    final minute = int.tryParse(hhmm[1]);
+    if (hour == null || minute == null) return null;
+    final now = DateTime.now();
+    var start = DateTime(now.year, monthIndex + 1, day, hour, minute);
+    if (start.isBefore(now.subtract(const Duration(days: 3)))) {
+      start = DateTime(now.year + 1, monthIndex + 1, day, hour, minute);
+    }
+    return start;
+  }
+
+  DateTime? get endDateTime =>
+      durationMin > 0 ? startDateTime?.add(Duration(minutes: durationMin)) : null;
+
+  /// True once this session's scheduled window has fully elapsed.
+  bool get isPastSession {
+    final end = endDateTime;
+    return end != null && DateTime.now().isAfter(end);
   }
 }
 

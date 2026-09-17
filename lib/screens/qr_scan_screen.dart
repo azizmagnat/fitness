@@ -5,7 +5,6 @@ import '../theme/app_theme.dart';
 import '../models/models.dart';
 import '../widgets/page_transitions.dart';
 import '../widgets/scanner_overlay.dart';
-import '../widgets/sound.dart';
 import '../state/bookings_store.dart';
 import 'face_scan_screen.dart';
 import 'settings_detail_screens.dart';
@@ -30,7 +29,6 @@ class _QrScanScreenState extends State<QrScanScreen> {
   void _onDetect(BarcodeCapture capture) async {
     if (_handled || capture.barcodes.isEmpty) return;
     _handled = true;
-    AppSound.success();
     HapticFeedback.mediumImpact();
     // The back camera (QR) must fully release before the front camera (face
     // scan) can acquire the sensor — on many devices only one camera session
@@ -87,7 +85,6 @@ class _QrScanScreenState extends State<QrScanScreen> {
               onManualConfirm: () {
                 if (_handled) return;
                 _handled = true;
-                AppSound.success();
                 BookingsStore.markConfirmed(widget.item);
                 Navigator.of(context)
                     .pushReplacement(slideUpRoute(VisitConfirmedScreen(item: widget.item)));

@@ -1,8 +1,12 @@
+import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/services.dart';
 
-/// Lightweight feedback using only built-in system sounds/haptics —
-/// no bundled audio assets, so nothing to license.
+/// Feedback via built-in system sounds/haptics, plus a short success chime
+/// (assets/sounds/success.m4a — user-provided, AI-generated, not sampled
+/// from any third-party app) played once at the visit-confirmation moment.
 class AppSound {
+  static final AudioPlayer _player = AudioPlayer()..setReleaseMode(ReleaseMode.stop);
+
   static void tap() {
     HapticFeedback.selectionClick();
     SystemSound.play(SystemSoundType.click);
@@ -10,7 +14,7 @@ class AppSound {
 
   static void success() {
     HapticFeedback.mediumImpact();
-    SystemSound.play(SystemSoundType.click);
+    _player.play(AssetSource('sounds/success.m4a'));
   }
 
   static void error() {

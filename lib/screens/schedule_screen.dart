@@ -12,6 +12,7 @@ import 'map_view_screen.dart';
 import 'notifications_screen.dart';
 import 'qr_scan_screen.dart';
 import 'subscription_screen.dart';
+import 'visit_confirmed_screen.dart';
 import 'visit_history_screen.dart';
 
 class ScheduleScreen extends StatelessWidget {
@@ -23,7 +24,14 @@ class ScheduleScreen extends StatelessWidget {
       body: SafeArea(
         child: ValueListenableBuilder<List<ScheduleItem>>(
           valueListenable: BookingsStore.items,
-          builder: (context, bookings, _) {
+          builder: (context, allBookings, _) {
+            // A confirmed (checked-in) visit auto-drops out of the active
+            // Jadval list once its session window has fully elapsed - it
+            // lives on in Tashriflar tarixi, which shows all confirmed
+            // visits regardless of time.
+            final bookings = allBookings
+                .where((b) => !(b.status == "Tasdiqlandi" && b.isPastSession))
+                .toList();
             final header = [
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 8, 8, 0),
@@ -463,7 +471,7 @@ class _ConfirmedCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return InkWell(
       borderRadius: BorderRadius.circular(18),
-      onTap: () => showBookingDetailSheet(context, item),
+      onTap: () => Navigator.of(context).push(slideUpRoute(VisitConfirmedScreen(item: item))),
       child: Container(
         decoration: BoxDecoration(
           color: AppColors.accentGreen.withValues(alpha: 0.08),
@@ -492,16 +500,24 @@ class _ConfirmedCard extends StatelessWidget {
               children: [
                 const Icon(Icons.calendar_today_outlined, size: 14, color: AppColors.textSecondary),
                 const SizedBox(width: 4),
-                Text(item.date, style: const TextStyle(color: AppColors.textSecondary, fontSize: 13)),
+                Text(item.date,
+                    style: const TextStyle(
+                        color: AppColors.textSecondary, fontSize: 13, fontWeight: FontWeight.w700)),
                 const SizedBox(width: 12),
                 const Icon(Icons.access_time_rounded, size: 14, color: AppColors.textSecondary),
                 const SizedBox(width: 4),
-                Text(item.time, style: const TextStyle(color: AppColors.textSecondary, fontSize: 13)),
+                Text(item.time,
+                    style: const TextStyle(
+                        color: AppColors.textSecondary, fontSize: 13, fontWeight: FontWeight.w600)),
               ],
             ),
             const SizedBox(height: 4),
             Text(item.gymName.toUpperCase(),
-                style: const TextStyle(color: AppColors.textSecondary, fontSize: 12, letterSpacing: 0.5)),
+                style: const TextStyle(
+                    color: AppColors.textSecondary,
+                    fontSize: 12,
+                    letterSpacing: 0.5,
+                    fontWeight: FontWeight.w600)),
             const SizedBox(height: 12),
             const Row(
               children: [

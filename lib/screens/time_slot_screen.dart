@@ -219,6 +219,7 @@ class _TimeSlotScreenState extends State<TimeSlotScreen> {
                           status: "Band qilinmagan",
                           rating: widget.gym.rating,
                           restriction: session.restriction,
+                          durationMin: session.durationMin,
                         ),
                       );
                     }

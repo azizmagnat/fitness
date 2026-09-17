@@ -9,7 +9,6 @@ import '../theme/app_theme.dart';
 import '../models/models.dart';
 import '../widgets/page_transitions.dart';
 import '../widgets/scanner_overlay.dart';
-import '../widgets/sound.dart';
 import '../state/bookings_store.dart';
 import 'visit_confirmed_screen.dart';
 
@@ -131,7 +130,6 @@ class _FaceScanScreenState extends State<FaceScanScreen> with SingleTickerProvid
           _handled = true;
           await _camController?.stopImageStream();
           setState(() => _confirming = true);
-          AppSound.success();
           HapticFeedback.mediumImpact();
           await Future.delayed(const Duration(milliseconds: 900));
           if (!mounted) return;
@@ -149,7 +147,6 @@ class _FaceScanScreenState extends State<FaceScanScreen> with SingleTickerProvid
   void _manualConfirm() {
     if (_handled) return;
     _handled = true;
-    AppSound.success();
     BookingsStore.markConfirmed(widget.item);
     Navigator.of(context).pushReplacement(slideUpRoute(VisitConfirmedScreen(item: widget.item)));
   }
